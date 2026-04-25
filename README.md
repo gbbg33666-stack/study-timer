@@ -3,158 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sadiq Focus Timer</title>
     <style>
-        :root {
-            --study-color: #f1e7d0; /* بيج هادئ */
-            --break-color: #a8d5ba; /* أخضر مريح للاستراحة */
-            --bg-glass: rgba(0, 0, 0, 0.4);
-        }
-
+        /* تصميم انسيابي وهادئ */
         body {
             background-color: transparent;
             margin: 0;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             overflow: hidden;
+            color: #ffffff;
         }
 
-        .container {
+        #timer-container {
             text-align: center;
-            padding: 30px;
-            border-radius: 25px;
-            background: var(--bg-glass);
-            backdrop-filter: blur(10px);
-            border: 2px solid var(--study-color);
-            transition: all 0.5s ease;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.2); /* خلفية سوداء شفافة جداً */
+            backdrop-filter: blur(5px); /* تأثير زجاجي */
+            border-radius: 100px; /* شكل بيضاوي أنيق */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        #status {
-            color: var(--study-color);
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+        #timer-container:active {
+            transform: scale(0.95);
         }
 
         #timer {
-            font-size: 100px;
-            font-weight: 800;
-            color: var(--study-color);
+            font-size: 80px;
+            font-weight: 200; /* خط نحيف جداً ليعطي طابعاً سينمائياً */
+            letter-spacing: -2px;
+            margin: 0;
             line-height: 1;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .controls {
-            margin-top: 20px;
-            opacity: 0; /* مخفية افتراضياً لتجميل البث */
-            transition: opacity 0.3s;
+        #label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 5px;
+            opacity: 0.7;
         }
-
-        .container:hover .controls {
-            opacity: 1; /* تظهر فقط عند الاقتراب منها */
-        }
-
-        button {
-            background: var(--study-color);
-            border: none;
-            padding: 8px 15px;
-            margin: 0 5px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1a1a1a;
-        }
-
-        button:hover { transform: scale(1.05); }
-
-        /* تغيير الألوان عند الاستراحة */
-        .break-mode { border-color: var(--break-color); }
-        .break-mode #timer, .break-mode #status { color: var(--break-color); }
     </style>
 </head>
 <body>
 
-<div class="container" id="mainContainer">
-    <div id="status">Focus Session</div>
+<div id="timer-container" onclick="toggleTimer()">
+    <div id="label">Focus</div>
     <div id="timer">50:00</div>
-    
-    <div class="controls">
-        <button onclick="toggleTimer()" id="startBtn">Start</button>
-        <button onclick="resetTimer()">Reset</button>
-        <button onclick="switchMode()">Switch Mode</button>
-    </div>
 </div>
 
 <script>
     let timeLeft = 50 * 60;
-    let isRunning = false;
-    let isStudyMode = true;
-    let timerId;
+    let isRunning = false; // لا يبدأ إلا عند الضغط
+    let timerId = null;
 
     const timerDisplay = document.getElementById('timer');
-    const statusDisplay = document.getElementById('status');
-    const container = document.getElementById('mainContainer');
-    const startBtn = document.getElementById('startBtn');
+    const labelDisplay = document.getElementById('label');
 
     function updateDisplay() {
         const mins = Math.floor(timeLeft / 60);
         const secs = timeLeft % 60;
-        timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        timerDisplay.textContent = 
+            `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
     function toggleTimer() {
         if (isRunning) {
             clearInterval(timerId);
-            startBtn.textContent = 'Start';
+            timerId = null;
+            labelDisplay.textContent = "Paused";
         } else {
+            labelDisplay.textContent = "Focus";
             timerId = setInterval(() => {
                 if (timeLeft > 0) {
                     timeLeft--;
                     updateDisplay();
                 } else {
-                    autoSwitch();
+                    clearInterval(timerId);
+                    labelDisplay.textContent = "Done";
                 }
             }, 1000);
-            startBtn.textContent = 'Pause';
         }
         isRunning = !isRunning;
     }
 
-    function autoSwitch() {
-        clearInterval(timerId);
-        isRunning = false;
-        switchMode();
-        toggleTimer(); // يبدأ العد التلقائي للمرحلة التالية
-    }
-
-    function switchMode() {
-        isStudyMode = !isStudyMode;
-        timeLeft = isStudyMode ? 50 * 60 : 10 * 60;
-        statusDisplay.textContent = isStudyMode ? "Focus Session" : "Rest Time";
-        if (isStudyMode) {
-            container.classList.remove('break-mode');
-        } else {
-            container.classList.add('break-mode');
-        }
-        updateDisplay();
-    }
-
-    function resetTimer() {
-        clearInterval(timerId);
-        isRunning = false;
-        isStudyMode = true;
-        timeLeft = 50 * 60;
-        statusDisplay.textContent = "Focus Session";
-        container.classList.remove('break-mode');
-        startBtn.textContent = 'Start';
-        updateDisplay();
-    }
+    // تحديث العرض الأولي
+    updateDisplay();
 </script>
 
 </body>
